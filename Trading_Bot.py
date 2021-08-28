@@ -19,7 +19,7 @@ investment = 10000
 def get_bar(today,yesterday):
     bar = ''
     #1
-    if today['h']<yesterday['h'] and today['l']>yesterday['l']:
+    if today['h']<=yesterday['h'] and today['l']>=yesterday['l']:
         bar = '1'
     elif today['h']>yesterday['h'] and today['l']>yesterday['l']:
         bar = '2u'
@@ -120,7 +120,7 @@ def get_data(stocks):
     
     data = pd.DataFrame.from_dict(data)
         
-    column_names = ["Stock","Date", "Prev Day Low", "Prev Day High","Open","Close","Day Low","Day High","Volume","Bar","Target Diff","Target %","Month Performance","Week Performance","Continuity","Direction","Traded","9 EMA", "20 EMA"]
+    column_names = ["Stock","Date", "Prev Day Low", "Prev Day High","Open","Close","Day Low","Day High","Volume","Bar","Prev Day Bar","Target Diff","Target %","Month Performance","Week Performance","Continuity","Direction","Traded","9 EMA", "20 EMA"]
     
     df = pd.DataFrame(columns = column_names)
     
@@ -141,6 +141,7 @@ def get_data(stocks):
 
         today = data[ticker][limit-timeAdj-1]
         yesterday = data[ticker][limit-timeAdj-2]
+        three_days_ago = data[ticker][limit-timeAdj-3]
         week = data[ticker][limit-timeAdj-6]
         month = data[ticker][0]
         prevLow = yesterday['l']
@@ -153,11 +154,12 @@ def get_data(stocks):
         monthPerf = high - month['o']
         weekPerf = high - week['o']
         bar = get_bar(today,yesterday)
+        previous_bar = get_bar(yesterday,three_days_ago)
         continuity = get_continuity(monthPerf, weekPerf)
         direction = get_direction(monthPerf,weekPerf)
         targetDiff = get_target_diff(today,yesterday,direction)
         targetPercent = get_target_percent(today,targetDiff)
-        new_row = {"Stock":ticker,"Date":datetime, "Prev Day Low":prevLow, "Prev Day High":prevHigh,"Open":open,"Close":close,"Day Low":low,"Day High":high,"Volume":volume,"Bar":bar,"Target Diff":targetDiff,"Target %":targetPercent,"Month Performance":monthPerf,"Week Performance":weekPerf,"Continuity":continuity,"Direction":direction,"Traded":'No',"9 EMA":ema_9, "20 EMA": ema_20}
+        new_row = {"Stock":ticker,"Date":datetime, "Prev Day Low":prevLow, "Prev Day High":prevHigh,"Open":open,"Close":close,"Day Low":low,"Day High":high,"Volume":volume,"Bar":bar,"Prev Day Bar":previous_bar,"Target Diff":targetDiff,"Target %":targetPercent,"Month Performance":monthPerf,"Week Performance":weekPerf,"Continuity":continuity,"Direction":direction,"Traded":'No',"9 EMA":ema_9, "20 EMA": ema_20}
         df = df.append(new_row, ignore_index=True)
     #time.sleep(60)    
     #print(df)
@@ -277,21 +279,66 @@ def stream_data(stocks,df):
                     
         time.sleep(15)
 
-stocks = 'SOFI,NOW,MNST,BAC,AMZN,SFIX,TMDX,JPM,MRK,NKE,PM,NEM,NCLH,MAA,LVS,ISRG,CCL,DLR,DHR,F,GNRC,GPN,GWW,ISRG,AAL,ABT,ACN,AEE,ANET,ARE,AMD,ILMN,GILD,CCIV,PFE,ABNB,FUBO,COIN,SPCE,DMTK,AAPL,MSFT,NVDA,PYPL,ADBE,INTC,CSCO,AVGO,TXN,QCOM,INTU,AMAT,AMD,LRCX,MU,ZM,ADP,FISV,ADSK,ADI,NXPI,ASML,DOCU,KLAC,MRVL,WDAY,SNPS,MCHP,PAYX,CDNS,CTSH,TEAM,XLNX,OKTA,ANSS,SWKS,MXIM,VRSN,CDW,SPLK,CHKP,GOOG,FB,GOOGL,CMCSA,NFLX,TMUS,CHTR,ATVI,BIDU,MTCH,EA,NTES,SIRI,FOXA,FOX,AMZN,TSLA,SBUX,BKNG,MELI,JD,PDD,MAR,EBAY,LULU,ROST,ORLY,PTON,DLTR,TCOM,AMGN,ISRG,MRNA,GILD,ILMN,REGN,BIIB,IDXX,VRTX,ALGN,DXCM,ALXN,SGEN,CERN,INCY,PEP,COST,MDLZ,KHC,KDP,CELH,MNST,WBA,CSX,CTAS,CPRT,PCAR,FAST,VRSK,EXC,AEP,XEL,XRAY'
+watchlist = 'SOFI,NOW,MNST,BAC,AMZN,SFIX,TMDX,JPM,MRK,NKE,PM,NEM,NCLH,MAA,LVS,ISRG,CCL,DLR,DHR,F,GNRC,GPN,GWW,ISRG,AAL,ABT,ACN,AEE,ANET,ARE,AMD,ILMN,GILD,CCIV,PFE,ABNB,FUBO,COIN,SPCE,DMTK,AAPL,MSFT,NVDA,PYPL,ADBE,INTC,CSCO,AVGO,TXN,QCOM,INTU,AMAT,AMD,LRCX,MU,ZM,ADP,FISV,ADSK,ADI,NXPI,ASML,DOCU,KLAC,MRVL,WDAY,SNPS,MCHP,PAYX,CDNS,CTSH,TEAM,XLNX,OKTA,ANSS,SWKS,MXIM,VRSN,CDW,SPLK,CHKP,GOOG,FB,GOOGL,CMCSA,NFLX,TMUS,CHTR,ATVI,BIDU,MTCH,EA,NTES,SIRI,FOXA,FOX,AMZN,TSLA,SBUX,BKNG,MELI,JD,PDD,MAR,EBAY,LULU,ROST,ORLY,PTON,DLTR,TCOM,AMGN,ISRG,MRNA,GILD,ILMN,REGN,BIIB,IDXX,VRTX,ALGN,DXCM,ALXN,SGEN,CERN,INCY,PEP,COST,MDLZ,KHC,KDP,CELH,MNST,WBA,CSX,CTAS,CPRT,PCAR,FAST,VRSK,EXC,AEP,XEL,XRAY'
 
-df = get_data(stocks)
+df = get_data(watchlist)
 
-rslt_df = df.loc[df['Bar']=='1']
+inside_day_df = df.loc[df['Bar']=='1']
 
-rslt_df = rslt_df.loc[rslt_df['Continuity']==1]
+inside_day_df = inside_day_df.loc[inside_day_df['Continuity']==1]
 
-rslt_df = rslt_df.loc[rslt_df['Target %'] > .003]
+inside_day_df = inside_day_df.loc[inside_day_df['Target %'] > .003]
 
-rslt_df=rslt_df.reset_index(drop=True)
+inside_day_df=inside_day_df.reset_index(drop=True)
 
-symbols = to_string(rslt_df)
+inside_day_df['Strategy'] = 'Inside Day'
+
+
+
+rev_strat_long_df = df.loc[df['Bar']=='2d']
+
+rev_strat_long_df = rev_strat_long_df.loc[rev_strat_long_df['Continuity']==1]
+
+rev_strat_long_df = rev_strat_long_df.loc[rev_strat_long_df['Direction'] =='up']
+
+rev_strat_long_df = rev_strat_long_df.loc[rev_strat_long_df['Prev Day Bar'] =='1']
+
+rev_strat_long_df=rev_strat_long_df.reset_index(drop=True)
+
+rev_strat_long_df['Strategy'] = 'Rev Strat Up'
+
+
+
+
+rev_strat_short_df = df.loc[df['Bar']=='2u']
+
+rev_strat_short_df = rev_strat_short_df.loc[rev_strat_short_df['Continuity']==1]
+
+rev_strat_short_df = rev_strat_short_df.loc[rev_strat_short_df['Direction'] =='down']
+
+rev_strat_short_df = rev_strat_short_df.loc[rev_strat_short_df['Prev Day Bar'] =='1']
+
+rev_strat_short_df=rev_strat_short_df.reset_index(drop=True)
+
+rev_strat_short_df['Strategy'] = 'Rev Strat Down'
+
+
+
+day_df = inside_day_df
+
+day_df = day_df.append(rev_strat_long_df)
+
+day_df = day_df.append(rev_strat_short_df)
+
+day_df=day_df.reset_index(drop=True)
+
+symbols = to_string(day_df)
+
 #%%
-r = stream_data(symbols, rslt_df)
+
+r = stream_data(symbols, day_df)
+
+### Next step is to update the STREAM_DATA def. I need to be able to trade any of the 3 current strategies where right now I can only trade an inside day.
 
 
 
